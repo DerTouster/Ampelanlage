@@ -2,7 +2,7 @@ package com.till;
 
 public class Main 
 {
-    public static void main(String[] args) throws Exception 
+    static void main(String[] args) throws Exception
     {
         Logic logic = new Logic();
 

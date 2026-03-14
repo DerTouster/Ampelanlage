@@ -1,1 +1,9 @@
+com/till/PedestrianLight.class
+com/till/Logic.class
+com/till/TrafficLightListener.class
 com/till/Main.class
+com/till/CrosWalkLoop.class
+com/till/TrafficLight.class
+com/till/SpeedCam.class
+com/till/ShiftRegisterManager.class
+com/till/TrafficLoop.class

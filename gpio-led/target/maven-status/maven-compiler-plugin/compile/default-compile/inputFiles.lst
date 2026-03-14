@@ -1,1 +1,9 @@
+/home/till/scripts/Projects/JAVA/gpio-led/src/main/java/com/till/CrosWalkLoop.java
+/home/till/scripts/Projects/JAVA/gpio-led/src/main/java/com/till/Logic.java
 /home/till/scripts/Projects/JAVA/gpio-led/src/main/java/com/till/Main.java
+/home/till/scripts/Projects/JAVA/gpio-led/src/main/java/com/till/PedestrianLight.java
+/home/till/scripts/Projects/JAVA/gpio-led/src/main/java/com/till/ShiftRegisterManager.java
+/home/till/scripts/Projects/JAVA/gpio-led/src/main/java/com/till/SpeedCam.java
+/home/till/scripts/Projects/JAVA/gpio-led/src/main/java/com/till/TrafficLight.java
+/home/till/scripts/Projects/JAVA/gpio-led/src/main/java/com/till/TrafficLightListener.java
+/home/till/scripts/Projects/JAVA/gpio-led/src/main/java/com/till/TrafficLoop.java

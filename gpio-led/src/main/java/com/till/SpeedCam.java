@@ -8,11 +8,10 @@ public class SpeedCam implements TrafficLightListener, Runnable
     private final ShiftRegisterManager manager;
     private final DigitalOutput trigger;
     private final DigitalInput echo;
-
     private volatile boolean isMonitoring = false;
     private double baselineDistance = 0;
     private final int targetLightId = 0;
-    private final int flashLedId = 12;
+    private final int flashLedId = 16;
 
     public SpeedCam(Context pi4j, ShiftRegisterManager manager, 
                                     int trigPin, 
@@ -124,13 +123,15 @@ public class SpeedCam implements TrafficLightListener, Runnable
 
             try {
                 Thread.sleep(50); // High-speed poll
-            } catch (InterruptedException e) {
+            } catch (InterruptedException e) 
+            {
                 break;
             }
         }
     }
 
-    private void triggerFlash() {
+    private void triggerFlash() 
+    {
         System.out.println("!!! RED LIGHT VIOLATION DETECTED !!!");
 
         // 1. Physical Flash
@@ -150,7 +151,8 @@ public class SpeedCam implements TrafficLightListener, Runnable
         manager.push();
     }
 
-    private void captureImage() {
+    private void captureImage() 
+    {
         String timestamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date());
         String fileName = "violation_" + timestamp + ".jpg";
 

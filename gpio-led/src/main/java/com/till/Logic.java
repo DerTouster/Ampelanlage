@@ -3,91 +3,103 @@ package com.till;
 import java.util.concurrent.atomic.AtomicBoolean;
 import com.pi4j.Pi4J;
 import com.pi4j.context.Context;
-import com.pi4j.io.gpio.digital.DigitalInput;
-import com.pi4j.io.gpio.digital.DigitalOutput;
-import com.pi4j.io.gpio.digital.DigitalState;
-import com.pi4j.io.gpio.digital.PullResistance;
+import com.pi4j.io.gpio.digital.*;
 
-public class Logic 
+public class Logic
 {
-    TrafficLight signal0;
-    TrafficLight signal1;
-    TrafficLight signal2;
-    TrafficLight signal3;
-    SpeedCam speedCam;
-    private AtomicBoolean crossWalkRequest;
-    private DigitalInput button;
+    // --- Configuration Constants ---
+    private static final int PIN_DATA = 17, PIN_CLOCK = 27, PIN_LATCH = 22;
+    private static final int PIN_PED_BUTTON = 18, PIN_AUDIO_BUTTON = 16;
+    private static final int PIN_STATUS_LED = 24;
+
+    // --- Hardware Components ---
+    private Context pi4j;
+    private ShiftRegisterManager manager;
+    private TrafficLight[] signals;
+    private PedestrianLight pedSignal;
+    private SpeedCam speedCam;
+
+    // --- Inputs/Outputs ---
+    private DigitalInput pedestrianButton;
+    private DigitalInput audioFeedbackToggle;
     private DigitalOutput statusOutput;
-    PedestrianLight pedSignal;
-    ShiftRegisterManager manager;
 
-    public void initialize()
+    // --- State Management ---
+    private final AtomicBoolean crossWalkRequest = new AtomicBoolean(false);
+    private final AtomicBoolean pedestriansWalk = new AtomicBoolean(false);
+    private final AtomicBoolean audioFeedback = new AtomicBoolean(false);
+
+    public void initialize() 
     {
-        Context pi4j = Pi4J.newContextBuilder()
-                .add(com.pi4j.plugin.gpiod.provider.gpio.digital.GpioDDigitalOutputProvider.newInstance())
-                .add(com.pi4j.plugin.gpiod.provider.gpio.digital.GpioDDigitalInputProvider.newInstance())
-                .build();
+        this.pi4j = Pi4J.newContextBuilder().autoDetect().build();
 
-        // 1. Initialize the Manager with specific GPIO pins
-        this.manager = new ShiftRegisterManager(pi4j, 17, 27, 22);
-
-        // 2. Create the 4 Traffic Light objects
-        // Light 0 uses LEDs 0,1,2 | Light 1 uses LEDs 3,4,5 ...
-        this.signal0 = new TrafficLight(manager, 0);
-        this.signal1 = new TrafficLight(manager, 1);
-        this.signal2 = new TrafficLight(manager, 2);
-        this.signal3 = new TrafficLight(manager, 3);
-
-        var buttonConfig = DigitalInput.newConfigBuilder(pi4j)
-                .address(18)
-                .pull(PullResistance.PULL_UP)
-                .debounce(3000L) // 3ms debounce to prevent "flicker"
-                .build();
-
-        this.button = pi4j.create(buttonConfig);
-
-        this.crossWalkRequest = new AtomicBoolean(false);
-
-        var statusConfig = DigitalOutput.newConfigBuilder(pi4j)
-            .address(24)
-            .id("status")
-            .shutdown(DigitalState.LOW)
-            .initial(DigitalState.LOW)
-            .provider("gpiod-digital-output")
-            .build();
-
-        this.statusOutput = pi4j.create(statusConfig);
-
+        // 1. Hardware Setup
+        this.manager = new ShiftRegisterManager(pi4j, PIN_DATA, PIN_CLOCK, PIN_LATCH);
+        this.pedSignal = new PedestrianLight(manager);
         this.speedCam = new SpeedCam(pi4j, manager, 23, 25);
+        
+        initializeTrafficLights();
+        initializeIO();
 
+        // 2. Calibration & Diagnostics
         speedCam.calibrate();
-
-        signal0.addListener(speedCam);
-
-        this.pedSignal  = new PedestrianLight(manager);
-
+        signals[0].addListener(speedCam);
         manager.playDemo();
+    }
+
+    private void initializeTrafficLights() 
+    {
+        this.signals = new TrafficLight[] 
+        {
+            new TrafficLight(manager, 0),
+            new TrafficLight(manager, 1),
+            new TrafficLight(manager, 2),
+            new TrafficLight(manager, 3)
+        };
+    }
+
+    private void initializeIO() 
+    {
+        this.pedestrianButton = createDigitalInput(PIN_PED_BUTTON, "PedBtn");
+        this.audioFeedbackToggle = createDigitalInput(PIN_AUDIO_BUTTON, "AudioBtn");
+        
+        this.statusOutput = pi4j.create(DigitalOutput.newConfigBuilder(pi4j)
+                .address(PIN_STATUS_LED)
+                .shutdown(DigitalState.LOW)
+                .initial(DigitalState.LOW)
+                .build());
+    }
+
+    private DigitalInput createDigitalInput(int address, String id) 
+    {
+        return pi4j.create(DigitalInput.newConfigBuilder(pi4j)
+                .address(address)
+                .id(id)
+                .pull(PullResistance.PULL_UP)
+                .debounce(10000L)
+                .build());
     }
 
     public void startSystem() 
     {
-    // 1. Create the Loops
-    TrafficLoop trafficLoop = new TrafficLoop(signal0, signal1, signal2, signal3, manager, crossWalkRequest, pedSignal);
-    CrosWalkLoop crosWalkLoop = new CrosWalkLoop(statusOutput, crossWalkRequest, button);
+        // Create Runnables
+        var trafficLoop = new TrafficLoop(signals[0], signals[1], signals[2], signals[3], 
+                                         manager, crossWalkRequest, pedSignal, pedestriansWalk);
+        
+        var crossWalkLoop = new CrosWalkLoop(statusOutput, crossWalkRequest, audioFeedback, 
+                                           pedestrianButton, audioFeedbackToggle, pedestriansWalk);
 
-    // 2. Wrap them in Threads
-    Thread trafficThread = new Thread(trafficLoop);
-    Thread crossWalkThread = new Thread(crosWalkLoop);
-    Thread speedCamThread = new Thread(speedCam);
+        // Start Threads
+        startThread(trafficLoop, "Traffic_Worker");
+        startThread(crossWalkLoop, "CrossWalk_Worker");
+        startThread(speedCam, "SpeedCam_Worker");
+        startThread(pedSignal, "PedestrianLight_Worker");
+    }
 
-    // 3. Asighn them Names
-    trafficThread.setName("Trafic_Worker");
-    crossWalkThread.setName("CrossWalk_Worker");
-    speedCamThread.setName("SpeedCam_Worker");
-    
-    // 4. Start everything
-    crossWalkThread.start();
-    trafficThread.start();
-    speedCamThread.start(); 
+    private void startThread(Runnable target, String name) 
+    {
+        Thread t = new Thread(target, name);
+        t.start();
+        System.out.println("Started: " + name);
     }
 }
