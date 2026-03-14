@@ -56,7 +56,7 @@ public class TrafficLoop implements Runnable
 
     private void handlePhase(TrafficLight[] activeStreet, TrafficLight[] idleStreet) throws InterruptedException 
     {
-        // 1. Check if pedestrians want to cross before switching
+        // 1. Checking if pedestrians want to cross before switching
         checkCrosswalk();
 
         // 2. Set Active Green, Idle Red

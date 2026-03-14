@@ -3,7 +3,8 @@ package com.till;
 import java.util.ArrayList;
 import java.util.List;
 
-class TrafficLight {
+class TrafficLight
+{
     private final ShiftRegisterManager manager;
     private final int startIndex;
     private final int lightId; // 0, 1, 2, or 3
@@ -14,7 +15,7 @@ class TrafficLight {
         this.manager = manager;
         this.lightId = lightNumber;
 
-        // Manually assign the Base ID to match your ShiftRegisterManager map
+        // Manually assign the Base ID to match ShiftRegisterManager map
         this.startIndex = switch (lightNumber) {
             case 0 -> 0; // IDs 0, 1, 2
             case 1 -> 3; // IDs 3, 4, 5

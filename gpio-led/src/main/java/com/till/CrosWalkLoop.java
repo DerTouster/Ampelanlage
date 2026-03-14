@@ -61,22 +61,18 @@ public class CrosWalkLoop implements Runnable
         try {
             while (!Thread.currentThread().isInterrupted()) 
                 {
-                // 1. THE GATEKEEPER: Check if Audio Feedback is enabled
-                // If false, loop here and do nothing else.
                 while (!audioFeedback.get()) 
                     {
                     // Ensures the LED is actually OFF while waiting
                     statusOutput.low();
 
-                    Thread.sleep(150); // Check every 150ms to save CPU
+                    Thread.sleep(150); // Checking every 150ms to save CPU
 
                     // Allow the thread to exit if interrupted during wait
                     if (Thread.currentThread().isInterrupted())
                         return;
                 }
 
-                // 2. THE BLINK LOGIC: Only reached if audioFeedback is TRUE
-                // Determine speed based on pedestrianRequest
                 int sleepTime = pedestriansWalk.get() ? 200 : 800;
 
                 statusOutput.high();

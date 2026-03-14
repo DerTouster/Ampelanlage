@@ -18,7 +18,7 @@ public class PedestrianLight implements Runnable
         manager.setLed(redId, false);
         manager.setLed(greenId, true);
         this.blinkFast = true;
-        manager.push(); // Ensure change is sent to hardware
+        manager.push(); // Ensures change is sent to hardware
     }
 
     public void setDontWalk() 
@@ -28,17 +28,10 @@ public class PedestrianLight implements Runnable
         this.blinkFast = false;
         manager.push();
     }
-    
-    public void setAllOff() 
-    {
-        manager.setLed(redId, false);
-        manager.setLed(greenId, false);
-        this.blinkFast = false;
-        manager.push();
-    }
 
     @Override
-    public void run() {
+    public void run()
+    {
         while (!Thread.currentThread().isInterrupted()) 
             {
             try 

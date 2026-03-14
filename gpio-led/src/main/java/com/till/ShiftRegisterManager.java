@@ -42,7 +42,7 @@ class ShiftRegisterManager
         // 2. Loop through all 16 physical bits of the two registers
         for (int bit = 0; bit < 16; bit++) 
             {
-            // Calculate which register and pin we are on (for the console output)
+            // Calculate which register and pin it are on (for the console output)
             int register = (bit < 8) ? 1 : 2;
             int pin = bit % 8;
 
@@ -50,11 +50,8 @@ class ShiftRegisterManager
 
             // MANUALLY set the bit without using getBitIndex mapping
             this.currentPattern = (1 << bit);
-
             push();
-
-            try 
-            {
+            try {
                 Thread.sleep(400); // Slightly faster scan
             } catch (InterruptedException e) 
             {

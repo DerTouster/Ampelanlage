@@ -63,7 +63,8 @@ public class SpeedCam implements TrafficLightListener, Runnable
             long pulseStart = System.nanoTime();
 
             // 2. Wait for Echo to go Low (End of pulse)
-            while (echo.isHigh()) {
+            while (echo.isHigh())
+            {
                 if (System.nanoTime() > (pulseStart + 50_000_000))
                     return -1;
             }
@@ -87,7 +88,8 @@ public class SpeedCam implements TrafficLightListener, Runnable
 
         while (!Thread.currentThread().isInterrupted()) 
             {
-            if (isMonitoring) {
+            if (isMonitoring)
+            {
                 double currentDist = measureDistance();
                 long currentTime = System.currentTimeMillis();
 
@@ -95,12 +97,11 @@ public class SpeedCam implements TrafficLightListener, Runnable
                 if (currentDist > 1) 
                     {
                         // Reduce the consecutive count but keep the logic tight
-                        if (violationArmed && currentDist < (baselineDistance * 0.85)) { // 15% drop is safer than 20%
+                        if (violationArmed && currentDist < (baselineDistance * 0.85)) {
                             consecutiveDetections++;
 
-                            // 2 detections at 30ms sleep is usually enough (~60ms total)
                             if (consecutiveDetections >= 2 && (currentTime - lastViolationTime > COOLDOWN_MS)) {
-                                // Run the flash/capture in a SEPARATE thread so the monitoring loop doesn't pause
+                                // Runing the flash/capture in a SEPARATE thread so the monitoring loop doesn't pause
                                 new Thread(this::triggerFlash).start();
                                 violationArmed = false;
                                 consecutiveDetections = 0;
@@ -167,7 +168,8 @@ public class SpeedCam implements TrafficLightListener, Runnable
             System.out.println("[Camera] Taking photo: " + fileName);
             pb.start();
             // finish the loop to continue without waiting for the disk write.
-        } catch (java.io.IOException e) {
+        } catch (java.io.IOException e)
+        {
             System.err.println("[Camera] Failed to capture image: " + e.getMessage());
         }
     }
