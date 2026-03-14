@@ -94,7 +94,6 @@ public class SpeedCam implements TrafficLightListener, Runnable
                 // Ignore impossible readings (like -1.0 or 0)
                 if (currentDist > 1) 
                     {
-
                         // Reduce the consecutive count but keep the logic tight
                         if (violationArmed && currentDist < (baselineDistance * 0.85)) { // 15% drop is safer than 20%
                             consecutiveDetections++;
