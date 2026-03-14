@@ -95,19 +95,19 @@ public class SpeedCam implements TrafficLightListener, Runnable
                 if (currentDist > 1) 
                     {
 
-                    // 1. DETECTION LOGIC
-                    if (violationArmed && currentDist < (baselineDistance * 0.80)) {
-                        consecutiveDetections++;
+                        // Reduce the consecutive count but keep the logic tight
+                        if (violationArmed && currentDist < (baselineDistance * 0.85)) { // 15% drop is safer than 20%
+                            consecutiveDetections++;
 
-                        // Only trigger if we see the car for 3 consecutive polls (~150ms)
-                        if (consecutiveDetections >= 3 && (currentTime - lastViolationTime > COOLDOWN_MS)) {
-                            triggerFlash();
-                            violationArmed = false;
-                            consecutiveDetections = 0;
-                            lastViolationTime = currentTime;
-                            System.out.println("[RedLightCam] Violation confirmed and logged.");
-                        }
-                    } else if (currentDist > (baselineDistance * 0.90)) {
+                            // 2 detections at 30ms sleep is usually enough (~60ms total)
+                            if (consecutiveDetections >= 2 && (currentTime - lastViolationTime > COOLDOWN_MS)) {
+                                // Run the flash/capture in a SEPARATE thread so the monitoring loop doesn't pause
+                                new Thread(this::triggerFlash).start();
+                                violationArmed = false;
+                                consecutiveDetections = 0;
+                                lastViolationTime = currentTime;
+                            }
+                        } else if (currentDist > (baselineDistance * 0.90)) {
                         // 2. RESET LOGIC
                         consecutiveDetections = 0;
                         if (!violationArmed) {
@@ -122,7 +122,7 @@ public class SpeedCam implements TrafficLightListener, Runnable
             }
 
             try {
-                Thread.sleep(50); // High-speed poll
+                Thread.sleep(30); // High-speed poll
             } catch (InterruptedException e) 
             {
                 break;
@@ -176,7 +176,8 @@ public class SpeedCam implements TrafficLightListener, Runnable
     @Override
     public void onStateChanged(int lightId, boolean isRed) 
     {
-        if (lightId == targetLightId) {
+        if (lightId == targetLightId)
+        {
             this.isMonitoring = isRed;
         }
     }

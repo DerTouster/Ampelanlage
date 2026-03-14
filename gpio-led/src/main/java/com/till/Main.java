@@ -2,8 +2,7 @@ package com.till;
 
 public class Main 
 {
-    static void main(String[] args) throws Exception
-    {
+    static void main() {
         Logic logic = new Logic();
 
         System.out.println("Initializing . . .");
